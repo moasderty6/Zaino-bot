@@ -7,26 +7,24 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 # ========================
-# إعدادات البوت
+# الإعدادات
 # ========================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN environment variable is missing!")
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")  # مثل https://your-bot.onrender.com
 
-WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")  # مثل: https://zino-bot.onrender.com
+if not BOT_TOKEN or not WEBHOOK_HOST:
+    raise RuntimeError("❌ تأكد من وجود المتغيرات BOT_TOKEN و WEBHOOK_HOST في إعدادات السيرفر.")
+
 WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
-# ========================
-# إنشاء كائنات البوت
-# ========================
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
 # ========================
-# أزرار التوجيه
+# لوحة الأزرار
 # ========================
 def start_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -54,25 +52,28 @@ async def start_handler(message: types.Message):
 
 
 # ========================
-# إعداد Webhook عند بدء التشغيل
+# إعداد Webhook تلقائيًا عند بدء التشغيل
 # ========================
 @dp.startup()
 async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL)
-    logging.info(f"Webhook set to: {WEBHOOK_URL}")
+    logging.info(f"✅ Webhook تم تفعيله: {WEBHOOK_URL}")
 
 
 # ========================
-# تشغيل تطبيق Aiohttp
+# خادم aiohttp لاستقبال التحديثات
 # ========================
 async def main():
     app = web.Application()
     app["bot"] = bot
 
+    # تفعيل webhook handler
     SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=WEBHOOK_PATH)
     setup_application(app, dp)
 
+    # تشغيل على بورت 8080
     port = int(os.getenv("PORT", "8080"))
+    logging.info(f"🚀 بدء السيرفر على البورت {port}")
     web.run_app(app, port=port)
 
 if __name__ == "__main__":
