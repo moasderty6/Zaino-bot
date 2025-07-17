@@ -1,14 +1,12 @@
-# استخدام Python الرسمي
 FROM python:3.11-slim
 
-# تعيين مجلد العمل
 WORKDIR /app
 
-# نسخ الملفات
 COPY . .
 
-# تثبيت المتطلبات
 RUN pip install --no-cache-dir -r requirements.txt
 
-# تشغيل البوت
+# فتح البورت 8080
+EXPOSE 8080
+
 CMD ["python", "main.py"]
