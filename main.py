@@ -22,7 +22,6 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-
 # ========================
 # لوحة الأزرار
 # ========================
@@ -38,10 +37,6 @@ def start_keyboard():
         )]
     ])
 
-
-# ========================
-# أمر /start
-# ========================
 @dp.message(F.text == "/start")
 async def start_handler(message: types.Message):
     await message.answer(
@@ -50,32 +45,20 @@ async def start_handler(message: types.Message):
         parse_mode=ParseMode.HTML
     )
 
-
-# ========================
-# إعداد Webhook تلقائيًا عند بدء التشغيل
-# ========================
 @dp.startup()
 async def on_startup(bot: Bot):
     await bot.set_webhook(WEBHOOK_URL)
-    logging.info(f"✅ Webhook تم تفعيله: {WEBHOOK_URL}")
-
+    logging.info(f"✅ Webhook set to: {WEBHOOK_URL}")
 
 # ========================
-# خادم aiohttp لاستقبال التحديثات
+# إعداد aiohttp بدون asyncio.run()
 # ========================
-async def main():
-    app = web.Application()
-    app["bot"] = bot
+app = web.Application()
+app["bot"] = bot
 
-    # تفعيل webhook handler
-    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=WEBHOOK_PATH)
-    setup_application(app, dp)
-
-    # تشغيل على بورت 8080
-    port = int(os.getenv("PORT", "8080"))
-    logging.info(f"🚀 بدء السيرفر على البورت {port}")
-    web.run_app(app, port=port)
+SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=WEBHOOK_PATH)
+setup_application(app, dp)
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    port = int(os.getenv("PORT", "8080"))
+    web.run_app(app, port=port)
