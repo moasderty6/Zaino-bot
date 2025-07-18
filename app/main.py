@@ -2,8 +2,7 @@ import asyncio
 import os
 from aiohttp import web
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, BotCommand
-from aiogram.utils.webhook import WebhookRequestHandler
+from aiogram.types import Message, BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Update
 
 TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
@@ -25,11 +24,15 @@ async def start(message: Message):
             {"text": "📬 للتواصل مع زينو", "url": "https://t.me/Sasam132"},
         ]
     ]
-    inline_kb = [[
-        web.types.InlineKeyboardButton(**btn) for btn in row
-    ] for row in kb]
+    inline_kb = [[InlineKeyboardButton(**btn) for btn in row] for row in kb]
+    await message.answer("أهلاً بك في بوت زينو 👋", reply_markup=InlineKeyboardMarkup(inline_kb))
 
-    await message.answer("أهلاً بك في بوت زينو 👋", reply_markup=web.types.InlineKeyboardMarkup(inline_kb))
+# ✅ استبدال WebhookRequestHandler بهذه الدالة
+async def handle_webhook(request):
+    data = await request.json()
+    update = Update.model_validate(data)
+    await dp.feed_update(bot, update)
+    return web.Response(text="OK")
 
 async def on_startup(app):
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
@@ -40,7 +43,7 @@ async def on_shutdown(app):
 
 async def main():
     app = web.Application()
-    app.router.add_post("/webhook", WebhookRequestHandler(dp))
+    app.router.add_post("/webhook", handle_webhook)  # ✅ تعديل هنا
     app.on_startup.append(on_startup)
     app.on_shutdown.append(on_shutdown)
 
