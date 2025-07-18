@@ -1,14 +1,15 @@
 import os
 import asyncio
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.webhook.aiohttp_server import setup_application
+from aiogram.client.default import DefaultBotProperties
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiohttp import web
 from dotenv import load_dotenv
-from aiogram.client.default import DefaultBotProperties
 
-# تحميل متغيرات البيئة
+from handlers import router  # تأكد أن الملف اسمه handlers.py
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -20,34 +21,18 @@ bot = Bot(
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 dp = Dispatcher(storage=MemoryStorage())
+dp.include_router(router)  # تسجيل الهاندلرات
 
-# /start
-@dp.message(F.text.startswith("/start"))
-async def start_handler(message: types.Message):
-    await message.answer(
-        "🤖 أهلاً بك في بوت Zeno! البوت يعمل الآن.\n\nللتواصل: @Sasam132",
-        reply_markup=types.InlineKeyboardMarkup(
-            inline_keyboard=[
-                [types.InlineKeyboardButton(text="📬 تواصل مع زينو", url="https://t.me/Sasam132")]
-            ]
-        )
-    )
-
-# رد افتراضي
-@dp.message()
-async def default_handler(message: types.Message):
-    await message.answer("📩 أرسل /start للبدء!")
-
-# Root للتأكيد فقط
+# صفحة جذر لإثبات أن السيرفر شغال
 async def handle_root(request):
     return web.Response(text="✅ Zeno Bot is Live!")
 
-# Main
 async def main():
     app = web.Application()
     app.router.add_get("/", handle_root)
-
+    app.router.add_post("/webhook", SimpleRequestHandler(dispatcher=dp, bot=bot))
     setup_application(app, dp, bot=bot)
+
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
 
     runner = web.AppRunner(app)
