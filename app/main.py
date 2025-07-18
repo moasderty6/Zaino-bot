@@ -1,34 +1,42 @@
-import os
 import asyncio
+from aiogram import types
 from aiohttp import web
-from dotenv import load_dotenv
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-
 from bot import bot, dp
 from handlers import router
-
-load_dotenv()
-
-WEBHOOK_PATH = "/webhook"
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
-PORT = int(os.environ.get("PORT", 8080))
+import os
 
 dp.include_router(router)
 
-async def on_startup(bot):
-    await bot.set_webhook(WEBHOOK_URL)
+async def on_startup(app: web.Application):
+    print("🔗 Bot started via webhook...")
 
-async def on_shutdown(bot):
-    await bot.delete_webhook()
+async def on_shutdown(app: web.Application):
+    await bot.session.close()
+
+async def handle_request(request):
+    data = await request.json()
+    update = types.Update(**data)
+    await dp.feed_update(bot, update)
+    return web.Response()
 
 async def main():
     app = web.Application()
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
+    app.router.add_post(f"/webhook", handle_request)
+    app.on_startup.append(on_startup)
+    app.on_shutdown.append(on_shutdown)
 
-    SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=WEBHOOK_PATH)
-    setup_application(app, dp, bot=bot)
-    return app
+    # Webhook setup
+    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+    await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+
+    # Start server
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", int(os.getenv("PORT", 8080)))
+    await site.start()
+    print(f"✅ Server running on port {os.getenv('PORT', 8080)}")
+    while True:
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    web.run_app(app=asyncio.run(main()), port=PORT)
+    asyncio.run(main())
