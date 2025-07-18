@@ -1,6 +1,5 @@
-from aiogram import F
+from aiogram import F, Router
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram import Router
 
 router = Router()
 
