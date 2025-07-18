@@ -1,40 +1,58 @@
-import asyncio
-from aiogram import types
-from aiohttp import web
-from bot import bot, dp
-from handlers import router
 import os
+import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.enums import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
+from dotenv import load_dotenv
 
-dp.include_router(router)
+# تحميل متغيرات البيئة
+load_dotenv()
 
-async def on_startup(app: web.Application):
-    print("🔗 Bot started via webhook...")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+PORT = int(os.environ.get("PORT", 8080))
 
-async def on_shutdown(app: web.Application):
-    await bot.session.close()
+# إعدادات البوت
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+dp = Dispatcher(storage=MemoryStorage())
 
-async def handle_request(request):
-    data = await request.json()
-    update = types.Update(**data)
-    await dp.feed_update(bot, update)
-    return web.Response()
+# أوامر البوت الأساسية
+@dp.message(commands=["start"])
+async def start_handler(message: types.Message):
+    await message.answer("🤖 أهلاً بك في بوت Zeno! البوت يعمل الآن بنجاح.")
 
+# رَد افتراضي
+@dp.message()
+async def echo_handler(message: types.Message):
+    await message.answer("📩 أرسل /start للبدء!")
+
+# نقطة البداية
 async def main():
+    # إعداد Web App
     app = web.Application()
-    app.router.add_post(f"/webhook", handle_request)
-    app.on_startup.append(on_startup)
-    app.on_shutdown.append(on_shutdown)
 
-    # Webhook setup
-    WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+    # مسار "/" الأساسي لعرض حالة السيرفر
+    async def handle_root(request):
+        return web.Response(text="✅ Zeno Bot is Live on Render!")
+
+    app.router.add_get("/", handle_root)
+
+    # إعداد webhook
+    app.router.add_post("/webhook", SimpleRequestHandler(dispatcher=dp, bot=bot))
+
+    # إعداد التطبيق
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+    setup_application(app, dp, bot=bot)
 
-    # Start server
+    # تشغيل التطبيق
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", int(os.getenv("PORT", 8080)))
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
-    print(f"✅ Server running on port {os.getenv('PORT', 8080)}")
+    print(f"✅ Bot is running on port {PORT}")
+
     while True:
         await asyncio.sleep(3600)
 
