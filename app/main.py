@@ -31,7 +31,7 @@ async def start(message: Message):
 async def handle_webhook(request):
     try:
         data = await request.json()
-        update = Update.model_validate(data)
+        update = Update(**data)
         await dp.feed_update(bot, update)
         return web.Response(text="OK")
     except Exception as e:
