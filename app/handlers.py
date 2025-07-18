@@ -1,19 +1,18 @@
-from aiogram import F, Router
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram import Router, types, F
 
 router = Router()
 
-@router.message(F.text == "/start")
-async def start_handler(message: Message):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="📢 قناة زينو الرسمية", url="https://t.me/zainaldinmaham1")],
-            [InlineKeyboardButton(text="🌐 منتدى شبكة زينو", url="https://t.me/+qaY85ZwO0HQwOGY0")],
-            [InlineKeyboardButton(text="✉️ تواصل مع زينو", url="https://t.me/Sasam132")]
-        ]
-    )
+@router.message(F.text.startswith("/start"))
+async def start_handler(message: types.Message):
     await message.answer(
-        f"أهلًا وسهلًا فيك <b>{message.from_user.first_name}</b> 👋\n"
-        "اختر من الأزرار التالية للتفاعل معنا:",
-        reply_markup=keyboard
+        "🤖 أهلاً بك في بوت Zeno! البوت يعمل الآن.\n\nللتواصل: @Sasam132",
+        reply_markup=types.InlineKeyboardMarkup(
+            inline_keyboard=[
+                [types.InlineKeyboardButton(text="📬 تواصل مع زينو", url="https://t.me/Sasam132")]
+            ]
+        )
     )
+
+@router.message()
+async def fallback_handler(message: types.Message):
+    await message.answer("📩 أرسل /start للبدء!")
