@@ -23,7 +23,7 @@ bot = Bot(
 dp = Dispatcher(storage=MemoryStorage())
 
 # أمر /start
-@dp.message(F.text == "/start")
+@dp.message(F.text.startswith("/start"))
 async def start_handler(message: types.Message):
     await message.answer(
         "🤖 أهلاً بك في بوت Zeno! البوت يعمل الآن.\n\nللتواصل: @Sasam132",
