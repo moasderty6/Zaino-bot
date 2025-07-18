@@ -43,7 +43,7 @@ async def homepage(request):
     return web.Response(text="بوت زينو يعمل ✅")
 
 async def on_startup(app):
-    await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+    await bot.set_webhook(WEBHOOK_URL.rstrip("/") + "/webhook")
     print(f"Webhook set to: {WEBHOOK_URL}/webhook")
 
 async def on_shutdown(app):
