@@ -3,7 +3,7 @@ import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.webhook.aiohttp_server import setup_application
 from aiohttp import web
 from dotenv import load_dotenv
 from aiogram.client.default import DefaultBotProperties
@@ -15,14 +15,13 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.environ.get("PORT", 8080))
 
-# إعداد البوت
 bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 dp = Dispatcher(storage=MemoryStorage())
 
-# أمر /start
+# /start
 @dp.message(F.text.startswith("/start"))
 async def start_handler(message: types.Message):
     await message.answer(
@@ -34,20 +33,19 @@ async def start_handler(message: types.Message):
         )
     )
 
-# الرد الافتراضي
+# رد افتراضي
 @dp.message()
 async def default_handler(message: types.Message):
     await message.answer("📩 أرسل /start للبدء!")
 
-# صفحة الجذر - لعرض أن البوت لايف
+# Root للتأكيد فقط
 async def handle_root(request):
     return web.Response(text="✅ Zeno Bot is Live!")
 
-# الدالة الرئيسية
+# Main
 async def main():
     app = web.Application()
     app.router.add_get("/", handle_root)
-    app.router.add_post("/webhook", SimpleRequestHandler(dispatcher=dp, bot=bot))
 
     setup_application(app, dp, bot=bot)
     await bot.set_webhook(f"{WEBHOOK_URL}/webhook")
