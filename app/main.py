@@ -18,13 +18,13 @@ dp = Dispatcher()
 async def start(message: Message):
     kb = [
         [
-            {"text": "📢 قناة زينو ياسر محاميد الرسمية", "url": "https://t.me/zainaldinmaham1"},
+            {"text": "📢 قناة زينو ياسر محاميد الرسمية", "url": "https://t.me/Tgstarssavebot"},
         ],
         [
-            {"text": "🗣 منتدى شبكة زينو الإخبارية", "url": "https://t.me/+qaY85ZwO0HQwOGY0"},
+            {"text": "🗣 منتدى شبكة زينو الإخبارية", "url": "https://t.me/Tgstarssavebot"},
         ],
         [
-            {"text": "📬 للتواصل مع زينو", "url": "https://t.me/Sasam132"},
+            {"text": "📬 للتواصل مع زينو", "url": "https://t.me/Tgstarssavebot"},
         ]
     ]
     inline_kb = [[InlineKeyboardButton(**btn) for btn in row] for row in kb]
