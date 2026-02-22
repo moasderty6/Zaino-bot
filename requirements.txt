@@ -1,4 +1,4 @@
-aiogram==3.4.1
-aiohttp
-python-dotenv
-asyncpg
+python-telegram-bot
+flask
+gunicorn
+yt-dlp
